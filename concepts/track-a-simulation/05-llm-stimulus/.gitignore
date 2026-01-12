@@ -1,0 +1,10 @@
+# Generated tests
+generated/
+
+# Python cache
+__pycache__/
+*.pyc
+
+# Test outputs
+*.vcd
+*.xml
