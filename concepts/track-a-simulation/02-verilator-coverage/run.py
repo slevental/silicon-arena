@@ -48,21 +48,21 @@ def parse_coverage_dat(coverage_file: Path) -> dict:
 
     for line in content.split('\n'):
         if line.startswith('C '):
-            parts = line.split("'")
-            if len(parts) >= 2:
-                # Extract count (last numeric value)
-                count_match = re.search(r"'(\d+)$", line)
-                if count_match:
-                    count = int(count_match.group(1))
+            # Format: C '<data>' <count>
+            # Extract count (number after the closing quote)
+            count_match = re.search(r"'\s*(\d+)\s*$", line)
+            if count_match:
+                count = int(count_match.group(1))
 
-                    if 'line' in line.lower() or 'vlCoverage' in line:
-                        line_points += 1
-                        if count > 0:
-                            line_hits += 1
-                    elif 'toggle' in line.lower():
-                        toggle_points += 1
-                        if count > 0:
-                            toggle_hits += 1
+                # Check coverage type (binary format uses \x01t\x02<type>)
+                if b'\x01t\x02line' in line.encode('latin-1', errors='replace') or 'tline' in line:
+                    line_points += 1
+                    if count > 0:
+                        line_hits += 1
+                elif b'\x01t\x02toggle' in line.encode('latin-1', errors='replace') or 'ttoggle' in line:
+                    toggle_points += 1
+                    if count > 0:
+                        toggle_hits += 1
 
     return {
         "line_points": line_points,
