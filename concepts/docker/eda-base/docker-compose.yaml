@@ -1,0 +1,39 @@
+# Docker Compose for Silicon Arena EDA Environment
+# Task ID: silicon-arena-6g7.3
+
+version: '3.8'
+
+services:
+  eda-base:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: silicon-arena/eda-base:latest
+    container_name: silicon-arena-eda
+    volumes:
+      # Mount the concepts directory
+      - ../../../concepts:/workspace/concepts:rw
+      # Mount RTL designs
+      - ../../../concepts/rtl:/workspace/rtl:ro
+    working_dir: /workspace
+    tty: true
+    stdin_open: true
+    environment:
+      - PYTHONPATH=/workspace
+      - VERILATOR_ROOT=/usr/local/share/verilator
+    # For X11 forwarding (gtkwave)
+    # environment:
+    #   - DISPLAY=${DISPLAY}
+    # volumes:
+    #   - /tmp/.X11-unix:/tmp/.X11-unix
+
+  # Lightweight variant for CI/CD
+  eda-minimal:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: minimal  # If using multi-stage builds
+    image: silicon-arena/eda-minimal:latest
+    volumes:
+      - ../../../concepts:/workspace/concepts:rw
+    working_dir: /workspace
