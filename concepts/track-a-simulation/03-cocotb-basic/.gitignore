@@ -1,0 +1,15 @@
+# Build artifacts
+sim_build/
+__pycache__/
+*.pyc
+
+# Test outputs
+*.vcd
+*.xml
+results.xml
+cocotb_coverage.json
+
+# Verilator artifacts
+obj_dir/
+*.o
+*.a
