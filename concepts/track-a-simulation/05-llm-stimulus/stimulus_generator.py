@@ -42,47 +42,71 @@ class GeneratedTest:
     explanation: str = ""
 
 
-# ALU module context for prompts
+# FP ALU module context for prompts (32-bit IEEE-754)
 ALU_CONTEXT = """
-## ALU Module Specification
+## FP ALU Module Specification (32-bit IEEE-754)
 
-The ALU is an 8-bit arithmetic logic unit with the following interface:
+The FP ALU is a 32-bit floating-point arithmetic logic unit with IEEE-754 support.
 
 ### Inputs
-- a[7:0]: First operand (8 bits)
-- b[7:0]: Second operand (8 bits)
-- op[2:0]: Operation selector (3 bits)
+- a_operand[31:0]: First operand (32-bit IEEE-754 or integer)
+- b_operand[31:0]: Second operand (32-bit IEEE-754 or integer)
+- Operation[3:0]: Operation selector (4 bits)
 
 ### Outputs
-- result[7:0]: Operation result (8 bits)
-- zero: Set when result is 0
-- overflow: Set on arithmetic overflow
-- carry: Carry out from addition/subtraction
+- ALU_Output[31:0]: Operation result (32 bits)
+- Exception: Set on invalid operation (e.g., NaN input)
+- Overflow: Set on arithmetic overflow
+- Underflow: Set on arithmetic underflow
 
 ### Operation Codes
-- 000 (0): ADD - result = a + b
-- 001 (1): SUB - result = a - b
-- 010 (2): AND - result = a & b
-- 011 (3): OR  - result = a | b
-- 100 (4): XOR - result = a ^ b
-- 101 (5): NOT - result = ~a
-- 110 (6): SHL - result = a << b[2:0]
-- 111 (7): SHR - result = a >> b[2:0]
+- 1  (MUL):      Floating-point multiplication
+- 2  (DIV):      Floating-point division
+- 3  (SUB):      Floating-point subtraction
+- 4  (OR):       Bitwise OR
+- 5  (AND):      Bitwise AND
+- 6  (XOR):      Bitwise XOR
+- 7  (SHL):      Left shift by 1
+- 8  (SHR):      Right shift by 1
+- 9  (FP2INT):   Convert FP to integer
+- 10 (ADD):      Floating-point addition
+- 11 (COMPL):    Bitwise complement (~a_operand)
+
+### IEEE-754 32-bit Format
+- Sign: bit 31
+- Exponent: bits 30-23 (biased by 127)
+- Mantissa: bits 22-0
 
 ### Cocotb Test Pattern
 ```python
+import struct
+
+def float_to_ieee754(f: float) -> int:
+    return struct.unpack('>I', struct.pack('>f', f))[0]
+
+def ieee754_to_float(bits: int) -> float:
+    return struct.unpack('>f', struct.pack('>I', bits & 0xFFFFFFFF))[0]
+
 @cocotb.test()
 async def test_name(dut):
-    # Drive inputs
-    dut.a.value = <value>
-    dut.b.value = <value>
-    dut.op.value = <op_code>
+    # Drive inputs (FP operations use IEEE-754 encoded values)
+    dut.a_operand.value = float_to_ieee754(1.5)  # For FP ops
+    dut.b_operand.value = float_to_ieee754(2.0)
+    dut.Operation.value = 10  # ADD
+
+    # For bitwise operations, use raw integers
+    dut.a_operand.value = 0xFFFF0000  # For bitwise ops
+    dut.b_operand.value = 0x0000FFFF
+    dut.Operation.value = 5  # AND
 
     # Wait for combinational logic
-    await Timer(1, units="ns")
+    await Timer(1, unit="ns")
 
     # Check outputs
-    assert int(dut.result.value) == <expected>
+    result = int(dut.ALU_Output.value)
+    exception = int(dut.Exception.value)
+    overflow = int(dut.Overflow.value)
+    underflow = int(dut.Underflow.value)
 ```
 """
 
@@ -101,7 +125,7 @@ def create_coverage_prompt(holes: list[CoverageHole], rtl_snippet: str = "") -> 
     holes_text = "\n".join(holes_desc)
 
     prompt = f"""You are an expert hardware verification engineer. Your task is to generate
-Cocotb test cases that will exercise uncovered code paths in an ALU design.
+Cocotb test cases that will exercise uncovered code paths in a 32-bit IEEE-754 FP ALU design.
 
 {ALU_CONTEXT}
 
@@ -287,14 +311,14 @@ def get_rtl_context(file_path: str, line_numbers: list[int], context_lines: int 
 
 if __name__ == "__main__":
     # Demo usage
-    print("LLM Stimulus Generator")
+    print("LLM Stimulus Generator (32-bit FP ALU)")
     print("=" * 50)
 
-    # Example coverage holes
+    # Example coverage holes for FP ALU
     holes = [
-        CoverageHole("alu.v", 69, "line", context="OR operation case"),
-        CoverageHole("alu.v", 70, "line", context="XOR operation case"),
-        CoverageHole("alu.v", 17, "toggle", "a[7]:0->1", "MSB of operand a"),
+        CoverageHole("ALU.v", 50, "line", context="FP2INT operation"),
+        CoverageHole("ALU.v", 60, "line", context="MUL operation"),
+        CoverageHole("ALU.v", 17, "toggle", "a_operand[31]:0->1", "Sign bit of operand a"),
     ]
 
     print("\nTarget coverage holes:")

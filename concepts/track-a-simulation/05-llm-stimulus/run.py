@@ -10,6 +10,10 @@ This script demonstrates:
 2. Generating prompts for Claude
 3. Generating Cocotb test cases
 4. Validating and running generated tests
+
+Updated for 32-bit IEEE-754 FP ALU with operations:
+- 1: MUL, 2: DIV, 3: SUB, 4: OR, 5: AND, 6: XOR
+- 7: SHL, 8: SHR, 9: FP2INT, 10: ADD, 11: COMPLEMENT
 """
 
 import json
@@ -72,7 +76,7 @@ def generate_with_api(generator: StimulusGenerator, holes: list[CoverageHole]) -
     for rtl_file in rtl_files:
         # Try to find the file
         possible_paths = [
-            Path(__file__).parent.parent.parent / "rtl" / "alu_8bit" / "alu.v",
+            Path(__file__).parent.parent.parent / "rtl" / "fp_alu_32bit" / "rtl" / "ALU.v",
             Path(rtl_file),
         ]
         for path in possible_paths:
@@ -178,11 +182,11 @@ def main():
         print("      WARNING: coverage.dat not found")
         print("      Using example coverage holes...")
         holes = [
-            CoverageHole("alu.v", 69, "line", context="OR operation"),
-            CoverageHole("alu.v", 70, "line", context="XOR operation"),
-            CoverageHole("alu.v", 71, "line", context="NOT operation"),
-            CoverageHole("alu.v", 17, "toggle", "a[7]:0->1"),
-            CoverageHole("alu.v", 18, "toggle", "b[7]:0->1"),
+            CoverageHole("ALU.v", 50, "line", context="FP2INT operation"),
+            CoverageHole("ALU.v", 60, "line", context="MUL operation"),
+            CoverageHole("ALU.v", 70, "line", context="DIV operation"),
+            CoverageHole("ALU.v", 17, "toggle", "a_operand[31]:0->1"),
+            CoverageHole("ALU.v", 18, "toggle", "b_operand[31]:0->1"),
         ]
     print()
 
@@ -212,53 +216,57 @@ def main():
         # Mock generation for demo
         print("[Mock] Creating example generated test...")
         test = GeneratedTest(
-            test_name="test_or_xor_coverage",
+            test_name="test_fp2int_mul_coverage",
             test_code='''@cocotb.test()
-async def test_or_xor_coverage(dut):
-    """Test OR and XOR operations to increase coverage.
+async def test_fp2int_mul_coverage(dut):
+    """Test FP2INT and MUL operations to increase coverage.
 
-    Targets coverage holes in lines 69-71 (OR, XOR operations).
+    Targets coverage holes for FP2INT (op=9) and MUL (op=1) operations.
+    Uses 32-bit IEEE-754 FP ALU interface.
     """
-    dut._log.info("Testing OR and XOR operations for coverage")
+    import struct
 
-    # Test OR operation (op=3)
-    test_cases_or = [
-        (0x00, 0x00, 0x00),  # 0 | 0 = 0
-        (0xFF, 0x00, 0xFF),  # all ones | zero
-        (0xAA, 0x55, 0xFF),  # alternating bits
-        (0x80, 0x01, 0x81),  # MSB and LSB
+    def float_to_ieee754(f: float) -> int:
+        return struct.unpack('>I', struct.pack('>f', f))[0]
+
+    dut._log.info("Testing FP2INT and MUL operations for coverage")
+
+    # Test MUL operation (op=1)
+    test_cases_mul = [
+        (1.0, 1.0),   # identity
+        (2.0, 3.0),   # 2 * 3 = 6
+        (0.5, 4.0),   # 0.5 * 4 = 2
+        (-1.0, 2.0),  # negative operand
     ]
 
-    for a, b, expected in test_cases_or:
-        dut.a.value = a
-        dut.b.value = b
-        dut.op.value = 3  # OR
-        await Timer(1, units="ns")
-        result = int(dut.result.value)
-        assert result == expected, f"OR: {a:#x} | {b:#x} = {result:#x}, expected {expected:#x}"
-        dut._log.info(f"OR: {a:#04x} | {b:#04x} = {result:#04x}")
+    for a, b in test_cases_mul:
+        dut.a_operand.value = float_to_ieee754(a)
+        dut.b_operand.value = float_to_ieee754(b)
+        dut.Operation.value = 1  # MUL
+        await Timer(1, unit="ns")
+        result = int(dut.ALU_Output.value)
+        dut._log.info(f"MUL: {a} * {b} => 0x{result:08X}")
 
-    # Test XOR operation (op=4)
-    test_cases_xor = [
-        (0xFF, 0xFF, 0x00),  # same values = 0
-        (0xAA, 0x55, 0xFF),  # alternating = all ones
-        (0x00, 0xFF, 0xFF),  # 0 ^ all = all
-        (0x80, 0x80, 0x00),  # MSB toggle
+    # Test FP2INT operation (op=9)
+    test_cases_fp2int = [
+        1.0,    # simple integer
+        2.5,    # fractional
+        -3.0,   # negative
+        100.75, # larger value
     ]
 
-    for a, b, expected in test_cases_xor:
-        dut.a.value = a
-        dut.b.value = b
-        dut.op.value = 4  # XOR
-        await Timer(1, units="ns")
-        result = int(dut.result.value)
-        assert result == expected, f"XOR: {a:#x} ^ {b:#x} = {result:#x}, expected {expected:#x}"
-        dut._log.info(f"XOR: {a:#04x} ^ {b:#04x} = {result:#04x}")
+    for a in test_cases_fp2int:
+        dut.a_operand.value = float_to_ieee754(a)
+        dut.b_operand.value = 0
+        dut.Operation.value = 9  # FP2INT
+        await Timer(1, unit="ns")
+        result = int(dut.ALU_Output.value)
+        dut._log.info(f"FP2INT: {a} => {result}")
 
-    dut._log.info("OR and XOR coverage tests passed!")
+    dut._log.info("FP2INT and MUL coverage tests passed!")
 ''',
             target_holes=holes[:5],
-            explanation="Targets OR and XOR operation coverage holes",
+            explanation="Targets FP2INT and MUL operation coverage holes",
         )
 
     if test:
