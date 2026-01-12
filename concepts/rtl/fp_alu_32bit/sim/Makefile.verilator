@@ -1,0 +1,63 @@
+# Verilator Makefile for FP ALU (32-bit IEEE-754)
+# Task ID: silicon-arena-8j0
+
+VERILATOR = verilator
+VERILATOR_FLAGS = --cc --exe --build -j 0
+VERILATOR_FLAGS += --trace --trace-structs
+VERILATOR_FLAGS += --coverage --coverage-line --coverage-toggle
+VERILATOR_FLAGS += -Wno-fatal -Wno-WIDTHEXPAND -Wno-WIDTHTRUNC -Wno-UNOPTFLAT
+VERILATOR_FLAGS += -Wno-CASEINCOMPLETE -Wno-LATCH
+
+# Source files
+RTL_DIR = ../rtl
+VERILOG_SOURCES = $(RTL_DIR)/ALU.v
+
+# Top module
+TOP_MODULE = ALU
+
+# Testbench
+TB_CPP = tb_fp_alu.cpp
+
+# Output directory
+OBJ_DIR = obj_dir
+
+# Default target
+all: $(OBJ_DIR)/V$(TOP_MODULE)
+
+# Build with Verilator
+$(OBJ_DIR)/V$(TOP_MODULE): $(VERILOG_SOURCES) $(TB_CPP)
+	$(VERILATOR) $(VERILATOR_FLAGS) \
+		--top-module $(TOP_MODULE) \
+		$(VERILOG_SOURCES) \
+		$(TB_CPP) \
+		-o V$(TOP_MODULE)
+
+# Run simulation
+run: $(OBJ_DIR)/V$(TOP_MODULE)
+	./$(OBJ_DIR)/V$(TOP_MODULE)
+
+# Run with tracing
+trace: $(OBJ_DIR)/V$(TOP_MODULE)
+	./$(OBJ_DIR)/V$(TOP_MODULE) +trace
+
+# Generate coverage report
+coverage: run
+	verilator_coverage --annotate annotated coverage.dat
+
+# Generate lcov info
+info: run
+	verilator_coverage --write-info coverage.info coverage.dat
+
+# Generate HTML report (requires lcov/genhtml)
+html: info
+	genhtml coverage.info -o coverage_html
+
+# View waveforms
+waves: trace
+	gtkwave fp_alu_trace.vcd &
+
+# Clean
+clean:
+	rm -rf $(OBJ_DIR) *.vcd coverage.dat coverage.info annotated coverage_html
+
+.PHONY: all run trace coverage info html waves clean

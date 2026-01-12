@@ -1,0 +1,33 @@
+# Verilator build artifacts
+obj_dir/
+*.o
+*.a
+*.d
+
+# Coverage outputs
+coverage.dat
+coverage.info
+annotated/
+coverage_html/
+
+# VCD traces
+*.vcd
+*.fsdb
+
+# VCS artifacts (legacy)
+AN.DB/
+csrc/
+simv
+simv.daidir/
+simv.vdb/
+DVEfiles/
+novas.conf
+verdiLog/
+*.log
+ucli.key
+vc_hdrs.h
+vcs_output_files/
+vdCovLog/
+cm.log
+novas.rc
+c_model.o
