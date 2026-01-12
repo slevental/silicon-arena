@@ -1,4 +1,4 @@
-# Cocotb Makefile for ALU testbench
+# Cocotb Makefile for FP ALU testbench (32-bit IEEE-754)
 # Task ID: silicon-arena-6g7.7
 # Spec Reference: File 2 - "Cocotb testbenches"
 
@@ -6,18 +6,20 @@
 SIM ?= verilator
 TOPLEVEL_LANG ?= verilog
 
-# Source files
-VERILOG_SOURCES = $(PWD)/../../rtl/alu_8bit/alu.v
+# Source files - Using 32-bit IEEE-754 FP ALU
+VERILOG_SOURCES = $(PWD)/../../rtl/fp_alu_32bit/rtl/ALU.v
 
 # Top level module
-TOPLEVEL = alu
+TOPLEVEL = ALU
 
 # Python test module
 MODULE = test_alu
 
 # Verilator-specific settings
 EXTRA_ARGS += --trace --trace-structs
-EXTRA_ARGS += -Wno-fatal
+# Suppress warnings for tristate logic (FP ALU uses multi-driven outputs)
+EXTRA_ARGS += -Wno-fatal -Wno-MULTIDRIVEN -Wno-IMPLICIT -Wno-CASEX
+EXTRA_ARGS += -Wno-WIDTHEXPAND -Wno-WIDTHTRUNC -Wno-UNOPTFLAT -Wno-CASEINCOMPLETE -Wno-LATCH
 
 # Enable coverage (optional)
 # EXTRA_ARGS += --coverage --coverage-line --coverage-toggle
