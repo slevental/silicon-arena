@@ -130,10 +130,10 @@ def main():
         rc, stdout, stderr = run_command(["make", "annotate"], cwd=script_dir)
 
         # Show annotated ALU
-        annotated_alu = script_dir / "annotated" / "alu.v"
+        annotated_alu = script_dir / "annotated" / "ALU.v"
         if annotated_alu.exists():
             print()
-            print("=== Annotated alu.v (showing coverage) ===")
+            print("=== Annotated ALU.v (showing coverage) ===")
             print(annotated_alu.read_text()[:2000])
             if annotated_alu.stat().st_size > 2000:
                 print("... (truncated)")
@@ -157,9 +157,11 @@ def main():
     print("Coverage concept validation complete!")
     print()
     print("Key observations:")
-    print("  - Only ADD, SUB, AND operations were tested")
-    print("  - OR, XOR, NOT, SHL, SHR have coverage gaps")
+    print("  - Using 32-bit IEEE-754 FP ALU")
+    print("  - Only ADD (10), SUB (3), AND (5) operations were tested")
+    print("  - MUL, DIV, OR, XOR, SHL, SHR, FP2INT, COMPL have coverage gaps")
     print("  - This demonstrates how to identify untested code paths")
+    print("  - Note: FP ALU uses tristate logic (limited Verilator support)")
     print("=" * 60)
 
     return 0

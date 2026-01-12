@@ -2,21 +2,24 @@
 # Task ID: silicon-arena-6g7.5
 # Spec Reference: File 2 - "Coverage tracking via Verilator --coverage"
 
-# Paths
-RTL_DIR = ../../rtl/alu_8bit
-RTL_SRC = $(RTL_DIR)/alu.v
+# Paths - Using 32-bit IEEE-754 FP ALU
+RTL_DIR = ../../rtl/fp_alu_32bit/rtl
+RTL_SRC = $(RTL_DIR)/ALU.v
 TB_SRC  = tb_alu_cov.cpp
 
 # Verilator settings
 VERILATOR = verilator
-VERILATOR_FLAGS = --cc --exe --build -Wall
+VERILATOR_FLAGS = --cc --exe --build -j 0
 VERILATOR_FLAGS += --coverage          # Enable all coverage types
 VERILATOR_FLAGS += --coverage-line     # Line coverage
 VERILATOR_FLAGS += --coverage-toggle   # Toggle coverage
 VERILATOR_FLAGS += -CFLAGS "-g"        # Debug symbols
+# Suppress warnings for tristate logic (FP ALU uses multi-driven outputs)
+VERILATOR_FLAGS += -Wno-fatal -Wno-MULTIDRIVEN -Wno-IMPLICIT -Wno-CASEX
+VERILATOR_FLAGS += -Wno-WIDTHEXPAND -Wno-WIDTHTRUNC -Wno-UNOPTFLAT -Wno-CASEINCOMPLETE
 
 # Output
-TOP_MODULE = alu
+TOP_MODULE = ALU
 OBJ_DIR = obj_dir
 EXECUTABLE = $(OBJ_DIR)/V$(TOP_MODULE)
 
@@ -79,7 +82,7 @@ report: annotate info
 	@echo "LCOV info: $(COV_INFO)"
 	@echo ""
 	@echo "To view annotated ALU source:"
-	@echo "  cat $(COV_ANNOTATE_DIR)/alu.v"
+	@echo "  cat $(COV_ANNOTATE_DIR)/ALU.v"
 
 # Show coverage statistics
 stats: run
