@@ -49,11 +49,18 @@ RUN apt-get update && apt-get install -y \
 RUN update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.11 1 \
     && update-alternatives --install /usr/bin/python python /usr/bin/python3.11 1
 
-# Install Verilator from source (version 5.x for better coverage support)
-ARG VERILATOR_VERSION=v5.024
-RUN git clone https://github.com/verilator/verilator.git /tmp/verilator \
+# Install Verilator from thomasnormal fork (enhanced SystemVerilog/UVM support)
+# This fork includes fixes for:
+# - Stream expressions with [] selection syntax
+# - $past with explicit clock argument
+# - Bind with instance list syntax
+# - Modport empty expression syntax
+# - Soft constraints and other UVM features
+ARG VERILATOR_REPO=https://github.com/thomasnormal/verilator.git
+ARG VERILATOR_BRANCH=local/combined-features
+RUN git clone ${VERILATOR_REPO} /tmp/verilator \
     && cd /tmp/verilator \
-    && git checkout ${VERILATOR_VERSION} \
+    && git checkout ${VERILATOR_BRANCH} \
     && autoconf \
     && ./configure --prefix=/usr/local \
     && make -j$(nproc) \

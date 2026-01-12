@@ -1,0 +1,11 @@
+# Build artifacts
+obj_dir/
+*.o
+*.a
+*.d
+
+# Coverage outputs
+coverage.dat
+coverage.info
+annotated/
+coverage_html/

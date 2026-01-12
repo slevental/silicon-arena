@@ -32,7 +32,7 @@ docker run -it --rm -v $(pwd):/workspace silicon-arena/eda-base:latest
 
 | Tool | Version | Purpose |
 |------|---------|---------|
-| Verilator | 5.024 | Simulation, coverage |
+| Verilator | thomasnormal/combined-features | Simulation, coverage (enhanced SV/UVM) |
 | Yosys | 0.40 | Synthesis |
 | SymbiYosys | latest | Formal verification |
 | Python | 3.11 | Scripting |
@@ -40,6 +40,15 @@ docker run -it --rm -v $(pwd):/workspace silicon-arena/eda-base:latest
 | Z3 | system | SMT solver |
 | Yices2 | system | SMT solver |
 | Boolector | latest | SMT solver |
+
+### Special Verilator Fork
+
+Uses [thomasnormal/verilator](https://github.com/thomasnormal/verilator) `local/combined-features` branch with:
+- Stream expressions with `[]` selection syntax
+- `$past` with explicit clock argument
+- Bind with instance list syntax parsing
+- Modport empty expression syntax `.name()`
+- Soft constraints and UVM feature support
 
 ## Python Packages
 
