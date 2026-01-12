@@ -10,6 +10,10 @@ This script demonstrates:
 2. Computing coverage metrics
 3. Identifying coverage holes
 4. Computing rewards from coverage deltas
+
+Updated for 32-bit IEEE-754 FP ALU with operations:
+- 1: MUL, 2: DIV, 3: SUB, 4: OR, 5: AND, 6: XOR
+- 7: SHL, 8: SHR, 9: FP2INT, 10: ADD, 11: COMPLEMENT
 """
 
 import sys
@@ -29,14 +33,14 @@ def create_mock_before_report() -> CoverageReport:
     report.version = "SystemC::Coverage-3 (mock before)"
 
     # Simulate partial coverage
-    file_cov = FileCoverage(file_path="alu.v")
+    file_cov = FileCoverage(file_path="ALU.v")
     file_cov.toggle_points = [
-        CoveragePoint("alu.v", 17, 31, "toggle", "a[0]:0->1", "TOP.alu", 5, ""),
-        CoveragePoint("alu.v", 17, 31, "toggle", "a[0]:1->0", "TOP.alu", 4, ""),
-        CoveragePoint("alu.v", 18, 31, "toggle", "b[0]:0->1", "TOP.alu", 0, ""),  # uncovered
-        CoveragePoint("alu.v", 18, 31, "toggle", "b[0]:1->0", "TOP.alu", 0, ""),  # uncovered
+        CoveragePoint("ALU.v", 17, 31, "toggle", "a[0]:0->1", "TOP.alu", 5, ""),
+        CoveragePoint("ALU.v", 17, 31, "toggle", "a[0]:1->0", "TOP.alu", 4, ""),
+        CoveragePoint("ALU.v", 18, 31, "toggle", "b[0]:0->1", "TOP.alu", 0, ""),  # uncovered
+        CoveragePoint("ALU.v", 18, 31, "toggle", "b[0]:1->0", "TOP.alu", 0, ""),  # uncovered
     ]
-    report.files["alu.v"] = file_cov
+    report.files["ALU.v"] = file_cov
     report.raw_points = file_cov.toggle_points.copy()
 
     return report
@@ -50,14 +54,14 @@ def create_mock_after_report() -> CoverageReport:
     report.version = "SystemC::Coverage-3 (mock after)"
 
     # Simulate improved coverage
-    file_cov = FileCoverage(file_path="alu.v")
+    file_cov = FileCoverage(file_path="ALU.v")
     file_cov.toggle_points = [
-        CoveragePoint("alu.v", 17, 31, "toggle", "a[0]:0->1", "TOP.alu", 8, ""),
-        CoveragePoint("alu.v", 17, 31, "toggle", "a[0]:1->0", "TOP.alu", 7, ""),
-        CoveragePoint("alu.v", 18, 31, "toggle", "b[0]:0->1", "TOP.alu", 3, ""),  # now covered
-        CoveragePoint("alu.v", 18, 31, "toggle", "b[0]:1->0", "TOP.alu", 2, ""),  # now covered
+        CoveragePoint("ALU.v", 17, 31, "toggle", "a[0]:0->1", "TOP.alu", 8, ""),
+        CoveragePoint("ALU.v", 17, 31, "toggle", "a[0]:1->0", "TOP.alu", 7, ""),
+        CoveragePoint("ALU.v", 18, 31, "toggle", "b[0]:0->1", "TOP.alu", 3, ""),  # now covered
+        CoveragePoint("ALU.v", 18, 31, "toggle", "b[0]:1->0", "TOP.alu", 2, ""),  # now covered
     ]
-    report.files["alu.v"] = file_cov
+    report.files["ALU.v"] = file_cov
     report.raw_points = file_cov.toggle_points.copy()
 
     return report

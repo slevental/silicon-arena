@@ -8,6 +8,10 @@ Spec Reference: File 2 - "CoverageParser utility"
 This module provides comprehensive parsing of Verilator coverage.dat files
 for use in reward computation and coverage-guided test generation.
 
+Updated for 32-bit IEEE-754 FP ALU with operations:
+- 1: MUL, 2: DIV, 3: SUB, 4: OR, 5: AND, 6: XOR
+- 7: SHL, 8: SHR, 9: FP2INT, 10: ADD, 11: COMPLEMENT
+
 Coverage.dat format (SystemC::Coverage-3):
   C '<data>' <count>
 
@@ -21,7 +25,7 @@ Where <data> contains encoded information:
   - h<hierarchy>: Hierarchy path
 
 Example:
-  C 'f../../rtl/alu.vl17n31ttogglepagev_toggle/aluoa[0]:0->1hTOP.alu' 6
+  C 'f../../rtl/fp_alu_32bit/rtl/ALU.vl17n31ttogglepagev_toggle/aluoa[0]:0->1hTOP.ALU' 6
 """
 
 from __future__ import annotations
