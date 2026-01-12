@@ -1,0 +1,13 @@
+# Build artifacts
+obj_dir/
+*.o
+*.a
+*.d
+
+# Simulation outputs
+*.vcd
+*.fst
+
+# Coverage data
+*.dat
+coverage_report/
